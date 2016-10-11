@@ -29,7 +29,7 @@ producer2 :: Use cs '[Integer, Int] => [Object cs]
 producer2 = [Object (100 :: Integer), Object (1 :: Int)]
 
 add10 :: Num ∈ cs => Object cs -> Object cs
-add10 = map1 @Num (+10)
+add10 o = map1 @Num o (+10)
 
 example :: [String]
 example = [ show (o+10) | Object o <- map add10 (producer1 @'[Show,Num] ++ producer2)]

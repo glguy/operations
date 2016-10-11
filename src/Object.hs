@@ -31,25 +31,31 @@ data Object cs = forall a. All cs a => Object a
 
 ------------------------------------------------------------------------
 
-upcast :: forall cs ds. cs ⊆ ds => Object ds -> Object cs
-upcast (Object (x :: a)) = Object x \\ pickN @cs @ds @a
-
-using1 :: forall c cs r. c ∈ cs => Object cs -> (forall a. c a => a -> r) -> r
-using1 (Object (x :: a)) f = f x \\ pick1 @c @cs @a
-
 usingN :: forall cs ds r. cs ⊆ ds => Object ds -> (forall a. All cs a => a -> r) -> r
 usingN (Object (x :: a)) f = f x \\ pickN @cs @ds @a
 
+
+
+upcast :: forall cs ds. cs ⊆ ds => Object ds -> Object cs
+upcast o = usingN @cs o Object
+
+using1 :: forall c cs r. c ∈ cs => Object cs -> (forall a. c a => a -> r) -> r
+using1 = usingN @'[c]
+
 usingA :: forall cs r. Object cs -> (forall a. All cs a => a -> r) -> r
-usingA (Object x) f = f x
+usingA = usingN @cs
 
-map1 :: forall c cs. c ∈ cs => (forall a. c a => a -> a) -> Object cs -> Object cs
-map1 f (Object (x :: a)) = Object (f x) \\ pick1 @c @cs @a
+------------------------------------------------------------------------
 
-mapN :: forall cs ds. cs ⊆ ds => (forall a. All cs a => a -> a) -> Object ds -> Object ds
-mapN f (Object (x :: a)) = Object (f x) \\ pickN @cs @ds @a
+mapN :: forall cs ds. cs ⊆ ds => Object ds -> (forall a. All cs a => a -> a) -> Object ds
+mapN (Object (x :: a)) f = Object (f x) \\ pickN @cs @ds @a
 
-mapA :: forall cs. (forall a. All cs a => a -> a) -> Object cs -> Object cs
+
+
+map1 :: forall c cs. c ∈ cs => Object cs -> (forall a. c a => a -> a) -> Object cs
+map1 = mapN @'[c]
+
+mapA :: forall cs. Object cs -> (forall a. All cs a => a -> a) -> Object cs
 mapA = mapN @cs
 
 ------------------------------------------------------------------------
