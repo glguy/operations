@@ -1,9 +1,9 @@
 {-# Language ExistentialQuantification #-}
-{-# Language MagicHash #-}
 {-# Language MultiParamTypeClasses, FlexibleInstances #-}
 {-# Language RankNTypes #-}
 {-# Language ConstraintKinds, DataKinds #-}
 {-# Language TypeOperators #-}
+{-# Language InstanceSigs #-}
 {-# Language ScopedTypeVariables #-}
 {-# Language TypeApplications, AllowAmbiguousTypes #-}
 
@@ -22,9 +22,8 @@ module Object
   ) where
 
 import TypeListOps
-import GHC.Exts
-import Data.Constraint
-import Control.Category
+import Data.Constraint ( (:-), top, (&&&), weaken1, weaken2, (\\))
+import Control.Category (id, (.))
 import Prelude hiding (id, (.))
 
 data Object cs = forall a. All cs a => Object a
@@ -64,24 +63,19 @@ class                     c ∈ cs        where pick1 :: All cs a :- c a
 instance {-# OVERLAPS #-} c ∈ (c ': cs) where pick1 = weaken1
 instance c ∈ cs =>        c ∈ (d ': cs) where pick1 = pick1 @c @cs . weaken2
 
-pick1P :: forall c cs a. c ∈ cs => Proxy# a -> All cs a :- c a
-pick1P _ = pick1 @c @cs @a
-
 ------------------------------------------------------------------------
 
-pickN :: forall cs ds a r. cs ⊆ ds => All ds a :- All cs a
-pickN = pickNP @cs @ds (proxy# :: Proxy# a)
-
 class cs ⊆ ds where
-  pickNP :: Proxy# a -> All ds a :- All cs a
+  pickN :: forall a. All ds a :- All cs a
 
 instance '[] ⊆ ds where
-  pickNP _ = top
+  pickN = top
 
 instance (c ∈ ds, cs ⊆ ds) => (c ': cs) ⊆ ds where
-  pickNP p = pick1P @c  @ds p
-         &&& pickNP @cs @ds p
+  pickN :: forall a. All ds a :- All (c ': cs) a
+  pickN = pick1 @c  @ds @a
+      &&& pickN @cs @ds @a
 
 -- handy shortcut
 instance {-# INCOHERENT #-} ds ⊆ ds where
-  pickNP _ = id
+  pickN = id
