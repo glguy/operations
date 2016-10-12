@@ -68,7 +68,7 @@ instance c ∈ cs =>        c ∈ (d ': cs) where pick1 = pick1 @c @cs . weaken2
 ------------------------------------------------------------------------
 
 type family (⊆´) cs ds :: Constraint where
-  (c ': cs) ⊆´ ds = (c ∈ ds, cs ⊆ ds, cs ⊆´ ds)
+  (c ': cs) ⊆´ ds = (c ∈ ds, cs ⊆ ds)
   '[]       ⊆´ ds = ()
 
 class cs ⊆´ ds => cs ⊆ ds where
