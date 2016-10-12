@@ -5,6 +5,8 @@
 {-# Language TypeOperators #-}
 {-# Language InstanceSigs #-}
 {-# Language ScopedTypeVariables #-}
+{-# Language TypeFamilies #-}
+{-# Language UndecidableInstances, UndecidableSuperClasses #-}
 {-# Language TypeApplications, AllowAmbiguousTypes #-}
 
 module Object
@@ -16,12 +18,13 @@ module Object
 
   , upcast
 
-  , using1, usingN, usingA
-  , map1, mapN, mapA
+  , using1, usingN -- usingA
+  , map1, mapN -- mapA
 
   ) where
 
 import TypeListOps
+import Data.Kind
 import Data.Constraint ( (:-), top, (&&&), weaken1, weaken2, (\\))
 import Control.Category (id, (.))
 import Prelude hiding (id, (.))
@@ -41,8 +44,8 @@ upcast o = usingN @cs o Object
 using1 :: forall c cs r. c ∈ cs => Object cs -> (forall a. c a => a -> r) -> r
 using1 = usingN @'[c]
 
-usingA :: forall cs r. Object cs -> (forall a. All cs a => a -> r) -> r
-usingA = usingN @cs
+-- usingA :: forall cs r. Object cs -> (forall a. All cs a => a -> r) -> r
+-- usingA = usingN @cs
 
 ------------------------------------------------------------------------
 
@@ -50,12 +53,11 @@ mapN :: forall cs ds. cs ⊆ ds => Object ds -> (forall a. All cs a => a -> a) -
 mapN (Object (x :: a)) f = Object (f x) \\ pickN @cs @ds @a
 
 
-
 map1 :: forall c cs. c ∈ cs => Object cs -> (forall a. c a => a -> a) -> Object cs
 map1 = mapN @'[c]
 
-mapA :: forall cs. Object cs -> (forall a. All cs a => a -> a) -> Object cs
-mapA = mapN @cs
+-- mapA :: forall cs. Object cs -> (forall a. All cs a => a -> a) -> Object cs
+-- mapA = mapN @cs
 
 ------------------------------------------------------------------------
 
@@ -65,17 +67,17 @@ instance c ∈ cs =>        c ∈ (d ': cs) where pick1 = pick1 @c @cs . weaken2
 
 ------------------------------------------------------------------------
 
-class cs ⊆ ds where
+type family (⊆´) cs ds :: Constraint where
+  (c ': cs) ⊆´ ds = (c ∈ ds, cs ⊆ ds, cs ⊆´ ds)
+  '[]       ⊆´ ds = ()
+
+class cs ⊆´ ds => cs ⊆ ds where
   pickN :: forall a. All ds a :- All cs a
 
 instance '[] ⊆ ds where
   pickN = top
 
-instance (c ∈ ds, cs ⊆ ds) => (c ': cs) ⊆ ds where
+instance ((c ': cs) ⊆´ ds) => (c ': cs) ⊆ ds where
   pickN :: forall a. All ds a :- All (c ': cs) a
   pickN = pick1 @c  @ds @a
       &&& pickN @cs @ds @a
-
--- handy shortcut
-instance {-# INCOHERENT #-} ds ⊆ ds where
-  pickN = id
