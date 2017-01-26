@@ -31,6 +31,12 @@ import Prelude hiding (id, (.))
 
 data Object cs = forall a. All cs a => Object a
 
+instance '[Show] ⊆ cs => Show (Object cs) where
+  showsPrec p o = showParen (p >= 11)
+                $ showString "Object "
+                . using1 @Show o (showsPrec 11)
+
+
 ------------------------------------------------------------------------
 
 usingN :: forall cs ds r. cs ⊆ ds => Object ds -> (forall a. All cs a => a -> r) -> r
