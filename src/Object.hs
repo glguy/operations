@@ -1,5 +1,5 @@
 {-# Language ExistentialQuantification #-}
-{-# Language MultiParamTypeClasses, FlexibleInstances #-}
+{-# Language MultiParamTypeClasses, FlexibleInstances, FlexibleContexts #-}
 {-# Language RankNTypes #-}
 {-# Language ConstraintKinds, DataKinds #-}
 {-# Language TypeOperators #-}
